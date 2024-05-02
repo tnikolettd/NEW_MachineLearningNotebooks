@@ -1,19 +1,42 @@
-# Starter pipeline
-# Start with a minimal pipeline that you can customize to build and deploy your code.
-# Add steps that build, run tests, deploy, and more:
-# https://aka.ms/yaml
-
 trigger:
 - master
 
 pool:
   vmImage: ubuntu-latest
 
-steps:
-- script: echo Hello, world!
-  displayName: 'Run a one-line script'
+stages:
+- stage: Build
+  jobs:
+  - job: BuildJob
+    displayName: 'Build Job'
+    steps:
+    - script: echo Build your application here
+      displayName: 'Build Application'
 
-- script: |
-    echo Add other tasks to build, test, and deploy your project.
-    echo See https://aka.ms/yaml
-  displayName: 'Run a multi-line script'
+- stage: Test
+  jobs:
+  - job: TestJob
+    displayName: 'Test Job'
+    steps:
+    - script: |
+        echo Run unit tests here
+        echo You can integrate test frameworks like pytest or unittest
+      displayName: 'Run Unit Tests'
+
+- stage: Deploy
+  jobs:
+  - job: DeployJob
+    displayName: 'Deployment Job'
+    condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/master'))
+    steps:
+    - download: none  # Assuming no artifacts are needed, adjust if your build step produces artifacts
+    - script: |
+        echo Deploying to Azure Web App
+        az login --service-principal -u $(servicePrincipalId) -p $(servicePrincipalKey) --tenant $(tenantId)
+        az webapp up --name <your-webapp-name> --resource-group <your-resource-group> --runtime "PYTHON|3.8"
+      displayName: 'Deploy to Azure Web App'
+      env:
+        servicePrincipalId: $(servicePrincipalId)
+        servicePrincipalKey: $(servicePrincipalKey)
+        tenantId: $(tenantId)
+
